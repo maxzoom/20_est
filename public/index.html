@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>중량 계산</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/" aria-label="견적 관리 홈"><span class="brand-mark">E</span> ESTIMATE</a>
+      <span class="service-name">견적 · 주문 관리</span>
+      <a class="header-link" href="#orders-title">주문 내역</a>
+    </div>
+  </header>
+  <main>
+    <div class="page-heading">
+      <div><p class="eyebrow">간편한 견적 관리</p><h1>중량 계산</h1><p class="page-description">거래처와 품목을 선택하고, 중량을 계산해 주문으로 저장하세요.</p></div>
+      <span class="page-badge">부피 × 밀도, 간편하게</span>
+    </div>
+    <div class="workspace">
+    <section class="entry-panel" aria-labelledby="entry-title">
+      <div class="panel-heading"><h2 id="entry-title">주문 정보 입력</h2><button id="refresh" type="button">재질 새로고침</button></div>
+      <p id="status" role="status" aria-live="polite">재질 목록을 불러오는 중입니다.</p>
+    <div class="fields">
+      <div class="full-width request-field">
+        <label for="request-id">요청ID</label>
+        <input id="request-id" type="text" readonly>
+        <p id="draft-status" role="status"></p>
+      </div>
+      <div class="full-width field-heading">
+        <h3>거래처 정보</h3><button id="choose-customer" type="button" aria-haspopup="dialog" aria-controls="customer-dialog">거래처 검색</button>
+      </div>
+      <div>
+        <label for="customer-code">거래처코드</label>
+        <input id="customer-code" name="customerCode" type="text" readonly>
+      </div>
+      <div>
+        <label for="customer-name">거래처명</label>
+        <input id="customer-name" name="customerName" type="text" readonly>
+      </div>
+      <div>
+        <label for="customer-contact">담당자</label>
+        <input id="customer-contact" name="customerContact" type="text" readonly>
+      </div>
+      <div class="full-width field-heading">
+        <h3>품목 정보</h3><button id="choose-item" type="button" aria-haspopup="dialog" aria-controls="item-dialog">품목 검색</button>
+      </div>
+      <div>
+        <label for="item-code">품목코드</label>
+        <input id="item-code" name="itemCode" type="text" readonly>
+      </div>
+      <div>
+        <label for="item-name">품목명</label>
+        <input id="item-name" name="itemName" type="text" readonly>
+      </div>
+      <div>
+        <label for="item-specification">규격</label>
+        <input id="item-specification" name="itemSpecification" type="text" readonly>
+      </div>
+      <div class="half-width">
+        <label for="material">재질</label>
+        <select id="material" name="materialCode" aria-describedby="status" disabled>
+          <option value="">재질 목록을 불러오는 중입니다.</option>
+        </select>
+      </div>
+      <div class="half-width">
+        <label for="density">비중(계산용 밀도, g/cm³)</label>
+        <input id="density" name="density" type="text" readonly placeholder="재질을 선택하면 표시됩니다.">
+      </div>
+      <div class="half-width">
+        <label for="volume">부피(cm³)</label>
+        <input id="volume" name="volume" type="number" min="0" step="any" required aria-describedby="volume-error">
+        <p id="volume-error" class="error" aria-live="polite"></p>
+      </div>
+      <div class="half-width">
+        <label for="quantity">수량(개)</label>
+        <input id="quantity" name="quantity" type="number" min="1" step="1" required aria-describedby="quantity-error">
+        <p id="quantity-error" class="error" aria-live="polite"></p>
+      </div>
+    </div>
+    </section>
+    <aside class="summary-panel" aria-labelledby="summary-title">
+    <div class="summary-heading"><span class="summary-dot"></span><h2 id="summary-title">계산 결과</h2></div>
+    <div class="results" aria-live="polite" aria-atomic="true">
+      <div class="weight-block"><span>개당 중량</span><p><output id="unit-weight">—</output> <span>kg</span></p></div>
+      <div class="weight-block total"><span>총중량</span><p><output id="total-weight">—</output> <span>kg</span></p></div>
+      <p id="calculation-status">재질, 부피, 수량을 입력해 주세요.</p>
+      <small>중량은 소수점 이하 최대 6자리로 표시합니다.</small>
+    </div>
+    <button id="save-order" type="button">주문 저장</button>
+    <p id="save-status" role="status" aria-live="polite"></p>
+    <div class="formula-note"><strong>계산 방법</strong><p>개당 중량 = 부피 × 밀도 ÷ 1000<br>총중량 = 반올림 전 개당 중량 × 수량</p></div>
+    </aside>
+    </div>
+    <section class="orders-panel" aria-labelledby="orders-title">
+      <div class="panel-heading"><h2 id="orders-title">저장된 주문</h2><button id="reload-orders" type="button">목록 새로고침</button></div>
+      <p id="orders-status" role="status" aria-live="polite"></p>
+      <p id="delete-status" role="status" aria-live="polite"></p>
+      <div class="table-scroll">
+        <table id="orders-table">
+          <thead><tr><th scope="col">요청ID</th><th scope="col">거래처</th><th scope="col">품목</th><th scope="col">재질</th><th scope="col">적용 밀도(g/cm³)</th><th scope="col">부피(cm³)</th><th scope="col">수량</th><th scope="col">개당 중량(kg)</th><th scope="col">총중량(kg)</th><th scope="col">메일</th><th scope="col">삭제</th></tr></thead>
+          <tbody id="orders-results"></tbody>
+        </table>
+      </div>
+    </section>
+    <footer class="site-footer"><span>ESTIMATE · 견적 관리</span><nav aria-label="API 확인"><a href="/api/health">서버 상태</a><a href="/api/materials">재질 데이터</a></nav></footer>
+  </main>
+  <dialog id="item-dialog" aria-labelledby="item-dialog-title">
+    <div class="dialog-header">
+      <h2 id="item-dialog-title">품목 검색</h2>
+      <button id="close-items" type="button" aria-label="품목 검색 닫기">닫기</button>
+    </div>
+    <form id="item-search-form" class="search-form">
+      <label for="item-query" class="sr-only">검색어</label>
+      <input id="item-query" type="search" placeholder="코드, 품목명, 규격 검색" autofocus>
+      <button type="submit">검색</button>
+    </form>
+    <p id="item-search-status" role="status" aria-live="polite"></p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th scope="col">품목코드</th><th scope="col">품목명</th><th scope="col">규격</th><th scope="col">단위</th><th scope="col">선택</th></tr></thead>
+        <tbody id="item-search-results"></tbody>
+      </table>
+    </div>
+    <button id="cancel-items" type="button">취소</button>
+  </dialog>
+  <dialog id="customer-dialog" aria-labelledby="customer-dialog-title">
+    <div class="dialog-header">
+      <h2 id="customer-dialog-title">거래처 검색</h2>
+      <button id="close-customers" type="button" aria-label="거래처 검색 닫기">닫기</button>
+    </div>
+    <form id="customer-search-form" class="search-form">
+      <label for="customer-query" class="sr-only">검색어</label>
+      <input id="customer-query" type="search" placeholder="거래처코드, 거래처명, 담당자 검색" autofocus>
+      <button type="submit">검색</button>
+    </form>
+    <p id="customer-search-status" role="status" aria-live="polite"></p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th scope="col">거래처코드</th><th scope="col">거래처명</th><th scope="col">담당자</th><th scope="col">선택</th></tr></thead>
+        <tbody id="customer-search-results"></tbody>
+      </table>
+    </div>
+    <button id="cancel-customers" type="button">취소</button>
+  </dialog>
+  <dialog id="delete-order-dialog" aria-labelledby="delete-order-title" aria-describedby="delete-order-description">
+    <div class="dialog-header">
+      <h2 id="delete-order-title">주문 삭제 확인</h2>
+      <button id="close-delete-order" type="button" aria-label="주문 삭제 확인 닫기">닫기</button>
+    </div>
+    <p id="delete-order-description">아래 주문을 삭제하시겠습니까?</p>
+    <dl class="delete-details">
+      <dt>요청ID</dt><dd id="delete-order-id"></dd>
+      <dt>거래처</dt><dd id="delete-order-customer"></dd>
+      <dt>품목</dt><dd id="delete-order-item"></dd>
+    </dl>
+    <p id="delete-order-error" class="error" role="status" aria-live="polite"></p>
+    <div class="dialog-actions">
+      <button id="cancel-delete-order" type="button" autofocus>취소</button>
+      <button id="confirm-delete-order" class="danger" type="button">삭제 확정</button>
+    </div>
+  </dialog>
+  <dialog id="email-dialog" aria-labelledby="email-title" aria-describedby="email-mode-notice">
+    <div class="dialog-header">
+      <h2 id="email-title">저장된 주문 메일 미리보기</h2>
+      <button id="close-email" type="button" aria-label="메일 미리보기 닫기">닫기</button>
+    </div>
+    <p id="email-mode-notice" class="preview-notice"><strong>미리보기와 실제 발송을 선택하세요.</strong><br>「.eml 미리보기 생성」은 파일만 만듭니다. 「실제 메일 발송」은 확인한 수신자 1명에게 SMTP 서버를 통해 메일을 보냅니다.</p>
+    <p id="smtp-status" role="status"></p>
+    <p>요청ID: <strong id="email-order-id"></strong></p>
+    <form id="email-form">
+      <label for="email-recipient">수신자 이메일 1명</label>
+      <input id="email-recipient" type="email" required autocomplete="email" placeholder="recipient@example.com">
+      <label for="email-subject">제목</label>
+      <input id="email-subject" type="text" readonly>
+      <label for="email-body">저장 기록으로 작성된 본문</label>
+      <textarea id="email-body" rows="15" readonly></textarea>
+      <label class="email-confirmation"><input id="email-confirmed" type="checkbox" required> 수신자 1명과 본문을 확인했습니다.</label>
+      <p id="email-status" role="status" aria-live="polite"></p>
+      <a id="email-download" class="download-link" hidden download>.eml 파일 다운로드 (실제 발송 아님)</a>
+      <div class="dialog-actions">
+        <button id="reload-email" type="button">본문 다시 읽기</button>
+        <button id="cancel-email" type="button">취소</button>
+        <button id="create-email" type="submit" disabled>.eml 미리보기 생성</button>
+        <button id="send-email" type="submit" disabled>실제 메일 발송</button>
+      </div>
+    </form>
+  </dialog>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
